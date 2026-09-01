@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PerpRadar — cross-venue perp funding rates</title>
+<meta name="description" content="Live perpetual-futures funding rates across Binance, Bybit, OKX and Hyperliquid. Find the fattest funding and the widest market-neutral spreads.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext y='26' font-size='26'%3E%F0%9F%93%A1%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<header class="hero">
+  <div class="wrap">
+    <div class="brand">📡 PerpRadar</div>
+    <h1>Where is perp funding fattest right now?</h1>
+    <p class="sub">
+      Live funding rates across <strong>Binance</strong>, <strong>Bybit</strong>, <strong>OKX</strong>
+      and <strong>Hyperliquid</strong> — annualized, side by side, with the widest market-neutral
+      spread for every coin. Built for delta-neutral funding farmers.
+    </p>
+    <div class="meta" id="meta">loading live data…</div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="controls">
+    <input type="search" id="filter" placeholder="Filter coins (e.g. BTC, SOL)…" autocomplete="off">
+    <div class="segmented" id="sortseg">
+      <button data-sort="oi" class="on">Open interest</button>
+      <button data-sort="carry">Funding size</button>
+      <button data-sort="spread">Cross-venue spread</button>
+    </div>
+    <label class="chk"><input type="checkbox" id="liquidOnly" checked> Liquid only (&gt;$10M OI)</label>
+  </section>
+
+  <div class="tablewrap">
+    <table id="grid">
+      <thead>
+        <tr>
+          <th class="l" data-k="coin">Coin</th>
+          <th data-k="binance">Binance</th>
+          <th data-k="bybit">Bybit</th>
+          <th data-k="okx">OKX</th>
+          <th data-k="hyperliquid">Hyperliquid</th>
+          <th data-k="spread">Spread (long→short)</th>
+          <th data-k="oi">OI</th>
+        </tr>
+      </thead>
+      <tbody id="rows"><tr><td colspan="7" class="empty">Loading…</td></tr></tbody>
+    </table>
+  </div>
+  <p class="note">
+    APR = current funding annualized (<code>rate × 24/interval × 365</code>). Green = longs pay shorts.
+    Binance &amp; Bybit rates come via Hyperliquid's predicted-funding feed. <strong>Not financial
+    advice</strong> — spreads are gross of fees, slippage and borrow cost.
+  </p>
+
+  <section class="digest" id="digest">
+    <h2>Today's funding digest</h2>
+    <div id="digestBody" class="digestbody">Loading…</div>
+  </section>
+
+  <section class="signup">
+    <h2>Get the digest in your inbox</h2>
+    <p>One email a day: biggest funding, widest spreads, notable 24h shifts. No spam, unsubscribe anytime.</p>
+    <form id="subForm">
+      <input type="email" id="email" placeholder="you@email.com" required>
+      <button type="submit">Subscribe</button>
+    </form>
+    <div id="subMsg" class="submsg"></div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    PerpRadar · data refreshes every ~15 min ·
+    <a href="/api/digest?format=md">digest API</a> ·
+    <a href="/api/funding">funding API</a>
+  </div>
+</footer>
+
+<script src="/js/screener.js"></script>
+</body>
+</html>

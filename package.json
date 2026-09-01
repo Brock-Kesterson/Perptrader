@@ -12,6 +12,7 @@
     "dry-run": "node scripts/dry-run.js",
     "poll": "node scripts/poll.js",
     "digest": "node scripts/build-digest.js",
+    "scheduler": "node scripts/scheduler.js",
     "serve": "node server.js"
   }
 }
