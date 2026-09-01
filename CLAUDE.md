@@ -1,0 +1,69 @@
+# CLAUDE.md — PerpRadar
+
+## What this is
+
+Perpetual-futures **funding-rate intelligence**. Two products from one data pipeline:
+
+1. **Free daily digest** (`data/digests/*.md`) — cross-venue funding highlights. Doubles as the
+   marketing engine: it gets posted to X / Reddit / a newsletter every day.
+2. **Paid tier** (not built yet) — live screener UI, real-time Telegram/Discord alerts on funding
+   thresholds and cross-venue spreads, historical charts. ~$19/mo via Stripe.
+
+Target user: funding-rate arbitrage / delta-neutral "funding farming" traders.
+
+## Stack / conventions
+
+- Node.js, **zero runtime dependencies** so far (global `fetch`, built-in `http`/`fs`). Keep it that
+  way unless a dependency is genuinely load-bearing (Stripe SDK, a Telegram lib later are fine).
+- CommonJS (`require`), not ESM.
+- Plain JSON files under `data/` for state — no database yet. `data/` is gitignored.
+- 2-space indent, `camelCase` funcs, `SCREAMING_SNAKE` module-level consts.
+- Tunables live in `lib/config.js`, not inline magic numbers.
+- Dev copy lives in OneDrive → file writes must be atomic-with-retry (`lib/store.js` `writeAtomic`),
+  same EPERM-mid-sync footgun as the trading-dashboard project.
+
+## Layout
+
+| File | Role |
+|---|---|
+| `lib/http.js` | `fetch` wrapper (timeout, retry) + `mapPool` bounded concurrency |
+| `lib/venues.js` | Per-venue adapters → raw funding records |
+| `lib/normalize.js` | Raw records → per-coin view: annualized APR, cross-venue spread |
+| `lib/store.js` | Snapshot JSON persistence under `data/` |
+| `lib/digest.js` | Snapshot → digest Markdown + social blurb |
+| `lib/config.js` | All tunables |
+| `scripts/dry-run.js` | Fetch + print table, no writes (`npm run dry-run`) |
+| `scripts/poll.js` | One fetch → snapshot cycle (`npm run poll`), for cron |
+| `scripts/build-digest.js` | Latest snapshot → digest files (`npm run digest`) |
+| `server.js` | Landing page + screener API — **not built yet** |
+
+## Venue reality (verified 2026-09-01, from a US IP)
+
+- **Binance** `fapi.binance.com` → HTTP 451 (US-geoblocked). **Bybit** `api.bybit.com` → HTTP 403
+  (CloudFront country block). Same wall the trading bot hit.
+- **Workaround:** Hyperliquid's `POST /info {"type":"predictedFundings"}` returns Binance + Bybit +
+  Hyperliquid predicted funding for ~230 coins, and is US-accessible. Those two venues' rates are
+  therefore *predicted*, not confirmed prints — flagged `predicted` in the source string. If we ever
+  need confirmed Binance/Bybit prints, the fix is a ~$5/mo non-US proxy VPS.
+- **OKX** `www.okx.com` → works from US. No bulk funding endpoint, so we fan out one request per
+  instrument over a curated ~130-coin list in `config.js`.
+- **Hyperliquid** `metaAndAssetCtxs` → authoritative HL funding + mark + OI. Funds hourly.
+- **dYdX v4** → US-accessible but its `nextFundingRate` values don't reconcile with the other four
+  venues; **disabled by default** (`config.includeDydx = false`). Adapter kept for later.
+
+## Gotchas
+
+- **11.0% APR is the neutral-funding baseline**, not a signal — it's the 0.01%-per-8h interest
+  component that applies when premium ≈ 0. The digest filters rows within `config.digest.baselineApr`.
+- Funding intervals differ by venue (Binance/Bybit/OKX 8h, HL/dYdX 1h). `normalize.js` annualizes
+  everything to a common APR: `rate * (24/intervalHours) * 365` (simple, non-compounded — market
+  convention).
+- Open-interest figures are "max across venues that reported it" and are the least reliable field —
+  don't build hard logic on exact OI values.
+- Large-supply memecoins are listed as `1000X` / `kX` on some venues; `canonicalCoin()` folds them
+  onto the bare ticker so cross-venue rows line up.
+
+## Not financial advice
+
+Everything output carries a disclaimer. We publish data, not trade recommendations. No custody, no
+order execution, no managed funds — keep it that way.

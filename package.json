@@ -1,0 +1,17 @@
+{
+  "name": "perpradar",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Perpetual-futures funding-rate intelligence: cross-venue funding screener + daily digest.",
+  "license": "UNLICENSED",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dry-run": "node scripts/dry-run.js",
+    "poll": "node scripts/poll.js",
+    "digest": "node scripts/build-digest.js",
+    "serve": "node server.js"
+  }
+}
