@@ -5,6 +5,7 @@
 // reads the latest snapshot / digest that scripts/poll.js + build-digest.js
 // produce under data/.
 
+require('./lib/env');
 const http = require('http');
 const fs = require('fs');
 const path = require('path');

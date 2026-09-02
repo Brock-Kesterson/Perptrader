@@ -32,10 +32,26 @@ Target user: funding-rate arbitrage / delta-neutral "funding farming" traders.
 | `lib/store.js` | Snapshot JSON persistence under `data/` |
 | `lib/digest.js` | Snapshot → digest Markdown + social blurb |
 | `lib/config.js` | All tunables |
+| `lib/alerts.js` | Snapshot (+ prior) + fire-state → alert events (pure) |
+| `lib/telegram.js` | Telegram sendMessage wrapper; `isConfigured()` gates sending |
+| `lib/env.js` | Zero-dep `.env` loader — `require` it first |
 | `scripts/dry-run.js` | Fetch + print table, no writes (`npm run dry-run`) |
 | `scripts/poll.js` | One fetch → snapshot cycle (`npm run poll`), for cron |
 | `scripts/build-digest.js` | Latest snapshot → digest files (`npm run digest`) |
-| `server.js` | Landing page + screener API — **not built yet** |
+| `scripts/alerts-dry.js` | Preview which alerts would fire (`npm run alerts-dry [-- --fresh]`) |
+| `scripts/alerts-test.js` | Send one test message to the Telegram chat (`npm run alerts-test`) |
+| `scripts/scheduler.js` | Prod loop: poll 15m + digest daily + alerts each cycle |
+| `server.js` | Landing page + screener + JSON API (port 4800) |
+
+## Alerts
+
+Broadcast model: one public Telegram channel, the free-tier funnel (per-user custom
+thresholds are the paid tier, after Stripe). `scheduler.js` runs `detectAlerts` after every
+poll. Types: `funding_extreme` (|APR| ≥ 50% on a venue), `spread_wide` (cross-venue spread
+≥ 30% APR), `funding_flip` (avg funding crossed zero since last poll). One alert per coin
+per cycle (spread > extreme > flip), max 6/cycle, 12h cooldown per key, fire-state in
+`data/alert-state.json`. If `TELEGRAM_BOT_TOKEN` / `TELEGRAM_CHAT_ID` are unset the engine
+still runs and logs what it *would* send — fully testable with no bot.
 
 ## Venue reality (verified 2026-09-01, from a US IP)
 
