@@ -32,20 +32,23 @@ pm2 save                     # persists across reboot (startup unit already exis
 pm2 status                   # expect perpradar-web + perpradar-scheduler online
 ```
 
-## Expose port 4800
+## Public access — LIVE at https://perpradarhq.com (set up 2026-09-03)
 
-Same model as the dashboard's 4700:
+- Domain `perpradarhq.com` (Porkbun, ~$11/yr, auto-renews). DNS: two `A` records
+  (`@` and `www`) → `137.184.119.237`.
+- DO Cloud Firewall: inbound **80** and **443** open to all IPv4/IPv6.
+- `ufw`: `sudo ufw allow "Nginx Full"` + `sudo ufw allow in on tailscale0 to any port 4800`
+  (Tailscale still reaches the app directly on 4800).
+- **nginx** reverse proxy: `/etc/nginx/sites-available/perpradar` → `127.0.0.1:4800`
+  (config also committed at `deploy/nginx-perpradar.conf` for reference).
+- **TLS**: Let's Encrypt via `certbot --nginx` (`-d perpradarhq.com -d www.perpradarhq.com
+  --redirect`). Auto-renews via certbot's systemd timer. Cert at
+  `/etc/letsencrypt/live/perpradarhq.com/`.
+- `PERPRADAR_URL=https://perpradarhq.com` is set in `ecosystem.config.js` (both apps) so
+  canonical tags / sitemap / digest + alert links use the real domain.
 
-```bash
-sudo ufw allow in on tailscale0 to any port 4800    # Tailscale-only
-```
-
-Do **not** add a DO Cloud Firewall inbound rule for 4800 — keeping it off the public
-internet is the point. Reach it at `http://100.120.90.98:4800` over Tailscale.
-
-When there's a real domain + public launch, put nginx in front (TLS via certbot) and
-open 80/443 in the DO Cloud Firewall — that's a separate step, noted here so it's not
-forgotten.
+To change the nginx config later: edit `/etc/nginx/sites-available/perpradar`,
+`sudo nginx -t && sudo systemctl reload nginx`.
 
 ## Deploy a change
 
