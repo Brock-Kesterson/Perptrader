@@ -54,12 +54,12 @@ async function runAlerts() {
   if (!events.length) return;
   const msgs = events.map((ev) => renderMessage(ev, config.alerts.siteUrl));
   if (!telegram.isConfigured()) {
-    console.log(`[alerts] ${events.length} would send (TELEGRAM_* not set):`);
+    console.log(`[alerts] ${events.length} would send (TELEGRAM_BOT_TOKEN not set):`);
     for (const ev of events) console.log(`  - ${ev.title}`);
     return;
   }
-  const { sent, failed } = await telegram.sendBatch(msgs);
-  console.log(`[alerts] sent ${sent}/${events.length} (failed ${failed}, dropped ${dropped})`);
+  const { sent, failed } = await telegram.sendBatch(msgs, { chatId: config.alerts.chatId });
+  console.log(`[alerts] sent ${sent}/${events.length} -> ${config.alerts.chatId} (failed ${failed}, dropped ${dropped})`);
 }
 
 async function cycle() {
