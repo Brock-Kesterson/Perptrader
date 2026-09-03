@@ -11,6 +11,7 @@ const fs = require('fs');
 const path = require('path');
 const { readLatest, readPrior, writeAtomic } = require('./lib/store');
 const { buildDigest } = require('./lib/digest');
+const pages = require('./lib/pages');
 const config = require('./lib/config');
 
 const SUBSCRIBERS_FILE = path.join(config.dataDir, 'subscribers.json');
@@ -135,6 +136,46 @@ function apiSubscribe(req, res) {
   });
 }
 
+// --- server-rendered SEO pages --------------------------------------------
+function sendHtml(res, status, html) {
+  res.writeHead(status, {
+    'content-type': 'text/html; charset=utf-8',
+    'cache-control': 'public, max-age=300',
+  });
+  res.end(html);
+}
+
+function routePages(res, pathname) {
+  const snap = readLatest();
+  if (!snap) { sendText(res, 503, 'warming up'); return true; }
+
+  if (pathname === '/funding' || pathname === '/funding/') {
+    sendHtml(res, 200, pages.coinIndex(snap));
+    return true;
+  }
+  if (pathname === '/spreads') {
+    sendHtml(res, 200, pages.spreadsPage(snap));
+    return true;
+  }
+  if (pathname === '/sitemap.xml') {
+    res.writeHead(200, { 'content-type': 'application/xml; charset=utf-8' });
+    res.end(pages.sitemap(snap));
+    return true;
+  }
+  if (pathname === '/robots.txt') {
+    sendText(res, 200, pages.robots());
+    return true;
+  }
+  const m = pathname.match(/^\/funding\/([A-Za-z0-9._-]{1,20})$/);
+  if (m) {
+    const html = pages.coinPage(m[1], snap);
+    if (html) sendHtml(res, 200, html);
+    else sendHtml(res, 404, pages.coinIndex(snap));
+    return true;
+  }
+  return false;
+}
+
 // --- static ------------------------------------------------------------
 function serveStatic(res, urlPath) {
   const rel = urlPath === '/' ? 'index.html' : urlPath.replace(/^\/+/, '');
@@ -155,6 +196,7 @@ const server = http.createServer((req, res) => {
     if (url.pathname === '/api/digest') return apiDigest(res, url);
     if (url.pathname === '/api/digests') return apiDigestArchive(res);
     if (url.pathname === '/api/subscribe' && req.method === 'POST') return apiSubscribe(req, res);
+    if (routePages(res, url.pathname)) return;
     return serveStatic(res, url.pathname);
   } catch (err) {
     console.error('[server] error', err);

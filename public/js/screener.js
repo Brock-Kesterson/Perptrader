@@ -95,7 +95,7 @@ function render() {
       const spread = c.spreadApr == null
         ? '<td class="muted">–</td>'
         : `<td><span class="spread">${fmtApr(c.spreadApr).txt}</span> <span class="route">${SHORT[c.spreadLongVenue]}→${SHORT[c.spreadShortVenue]}</span></td>`;
-      return `<tr><td class="coin">${c.coin}</td>${cells}${spread}<td class="muted">${fmtUsd(c.openInterestUsd)}</td></tr>`;
+      return `<tr><td class="coin"><a href="/funding/${c.coin}">${c.coin}</a></td>${cells}${spread}<td class="muted">${fmtUsd(c.openInterestUsd)}</td></tr>`;
     }).join('');
   }
   document.querySelectorAll('thead th').forEach((th) => {

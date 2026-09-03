@@ -69,7 +69,9 @@ tbody td {
 }
 tbody tr:last-child td { border-bottom: 0; }
 tbody tr:hover td { background: var(--panel); }
-td.coin { text-align: left; font-family: inherit; font-weight: 600; color: #fff; }
+td.coin { text-align: left; font-family: inherit; font-weight: 600; }
+td.coin a { color: #fff; }
+td.coin a:hover { color: var(--accent); }
 td.pos { color: var(--pos); }
 td.neg { color: var(--neg); }
 td.muted { color: var(--dim); }

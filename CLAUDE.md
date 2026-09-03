@@ -41,7 +41,17 @@ Target user: funding-rate arbitrage / delta-neutral "funding farming" traders.
 | `scripts/alerts-dry.js` | Preview which alerts would fire (`npm run alerts-dry [-- --fresh]`) |
 | `scripts/alerts-test.js` | Send one test message to the Telegram chat (`npm run alerts-test`) |
 | `scripts/scheduler.js` | Prod loop: poll 15m + digest daily + alerts each cycle |
-| `server.js` | Landing page + screener + JSON API (port 4800) |
+| `server.js` | Landing page + screener + JSON API + SEO pages (port 4800) |
+| `lib/pages.js` | Server-rendered SEO pages (per-coin, index, spreads, sitemap) |
+
+## SEO pages
+
+Server-rendered (not JS) so search engines index real numbers: `/funding/<COIN>` (per-coin
+funding + spread + honest templated prose + JSON-LD Dataset), `/funding` (coin index),
+`/spreads` (widest-spread ranking), `/sitemap.xml`, `/robots.txt`. All render the latest
+snapshot on each request, `cache-control: max-age=300`. Canonical/OG/sitemap URLs come from
+`PERPRADAR_URL` env — **must be updated when the real domain is live** or every canonical
+tag points at the placeholder.
 
 ## Alerts
 
