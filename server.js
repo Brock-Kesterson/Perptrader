@@ -172,6 +172,13 @@ function routePages(res, pathname) {
     sendText(res, 200, pages.robots());
     return true;
   }
+  // Plain-text ready-to-paste Substack post (title / subtitle / body).
+  if (pathname === '/digest') {
+    const prior = readPrior(20 * 3600 * 1000);
+    const n = buildNewsletter(snap, prior);
+    sendText(res, 200, `${n.title}\n\n${n.subtitle}\n\n${n.markdown}\n`);
+    return true;
+  }
   const m = pathname.match(/^\/funding\/([A-Za-z0-9._-]{1,20})$/);
   if (m) {
     const html = pages.coinPage(m[1], snap);
