@@ -9,7 +9,7 @@ const fs = require('fs');
 const path = require('path');
 const { poll } = require('./poll');
 const { readLatest, readPrior, readAlertState, writeAlertState } = require('../lib/store');
-const { buildDigest } = require('../lib/digest');
+const { buildDigest, buildNewsletter } = require('../lib/digest');
 const { detectAlerts, renderMessage } = require('../lib/alerts');
 const telegram = require('../lib/telegram');
 const config = require('../lib/config');
@@ -37,9 +37,12 @@ function maybeBuildDigest() {
   if (!latest) return;
   const prior = readPrior(20 * 3600 * 1000);
   const { markdown, tweet, stats } = buildDigest(latest, prior);
+  const nl = buildNewsletter(latest, prior);
   fs.mkdirSync(DIGEST_DIR, { recursive: true });
   fs.writeFileSync(path.join(DIGEST_DIR, `${date}.md`), markdown + '\n');
   fs.writeFileSync(path.join(DIGEST_DIR, `${date}.social.txt`), tweet + '\n');
+  // Ready-to-paste Substack post: title, subtitle, then body.
+  fs.writeFileSync(path.join(DIGEST_DIR, `${date}.newsletter.md`), `${nl.title}\n\n${nl.subtitle}\n\n${nl.markdown}\n`);
   console.log(`[scheduler] built digest ${date} ${JSON.stringify(stats)} (prior=${!!prior})`);
 }
 

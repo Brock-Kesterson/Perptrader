@@ -170,27 +170,21 @@ async function loadDigest() {
 }
 
 // --- subscribe ---
-$('#subForm').addEventListener('submit', async (e) => {
+// The digest is a Substack publication. Capture locally as a backup, then hand
+// off to Substack to actually confirm and manage the subscription.
+const SUBSTACK_SUBSCRIBE = 'https://perpradarhq.substack.com/subscribe';
+$('#subForm').addEventListener('submit', (e) => {
   e.preventDefault();
-  const btn = e.target.querySelector('button');
+  const email = $('#email').value.trim();
   const msg = $('#subMsg');
-  btn.disabled = true;
-  msg.className = 'submsg';
-  msg.textContent = '';
-  try {
-    const r = await fetch('/api/subscribe', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ email: $('#email').value.trim() }),
-    });
-    const j = await r.json();
-    if (r.ok) { msg.className = 'submsg ok'; msg.textContent = "You're on the list. First digest lands tomorrow."; e.target.reset(); }
-    else { msg.className = 'submsg err'; msg.textContent = j.error || 'Something went wrong.'; }
-  } catch {
-    msg.className = 'submsg err';
-    msg.textContent = 'Network error — try again.';
-  }
-  btn.disabled = false;
+  fetch('/api/subscribe', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ email }),
+  }).catch(() => {});
+  msg.className = 'submsg ok';
+  msg.textContent = 'Opening Substack to confirm…';
+  window.location.href = `${SUBSTACK_SUBSCRIBE}?email=${encodeURIComponent(email)}`;
 });
 
 load();

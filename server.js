@@ -10,7 +10,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const { readLatest, readPrior, writeAtomic } = require('./lib/store');
-const { buildDigest } = require('./lib/digest');
+const { buildDigest, buildNewsletter } = require('./lib/digest');
 const pages = require('./lib/pages');
 const config = require('./lib/config');
 
@@ -85,8 +85,14 @@ function apiDigest(res, url) {
   const snap = readLatest();
   if (!snap) return sendJson(res, 503, { error: 'no snapshot yet' });
   const prior = readPrior(20 * 3600 * 1000);
+  const fmt = url.searchParams.get('format');
+  if (fmt === 'newsletter') {
+    const n = buildNewsletter(snap, prior);
+    if (url.searchParams.get('as') === 'json') return sendJson(res, 200, n);
+    return sendText(res, 200, `${n.title}\n\n${n.subtitle}\n\n${n.markdown}`, 'text/markdown; charset=utf-8');
+  }
   const digest = buildDigest(snap, prior);
-  if (url.searchParams.get('format') === 'md') {
+  if (fmt === 'md') {
     return sendText(res, 200, digest.markdown, 'text/markdown; charset=utf-8');
   }
   sendJson(res, 200, digest);
