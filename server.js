@@ -172,11 +172,17 @@ function routePages(res, pathname) {
     sendText(res, 200, pages.robots());
     return true;
   }
-  // Plain-text ready-to-paste Substack post (title / subtitle / body).
+  // Plain-text ready-to-paste posts: Substack post on top, then the X/social
+  // version below a divider. One page to copy from each day.
   if (pathname === '/digest') {
     const prior = readPrior(20 * 3600 * 1000);
     const n = buildNewsletter(snap, prior);
-    sendText(res, 200, `${n.title}\n\n${n.subtitle}\n\n${n.markdown}\n`);
+    const d = buildDigest(snap, prior);
+    const out =
+      `======== SUBSTACK (title / subtitle / body) ========\n\n` +
+      `${n.title}\n\n${n.subtitle}\n\n${n.markdown}\n\n\n` +
+      `======== X / SOCIAL ========\n\n${d.tweet}\n`;
+    sendText(res, 200, out);
     return true;
   }
   const m = pathname.match(/^\/funding\/([A-Za-z0-9._-]{1,20})$/);
